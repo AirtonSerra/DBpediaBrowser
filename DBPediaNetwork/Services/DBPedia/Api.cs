@@ -27,13 +27,14 @@ namespace DBPediaNetwork.Services.DBPedia
             ResourceResult modelResult;
             string query = "select distinct ?value ?label " +
                            "where { " +
-                           "dbr:" + dbr + " ?property ?value . " +
+                           $"dbr:{dbr} ?property ?value . " +
                            "optional{ " +
                            "?value rdfs:label ?label. " +
                            "} " +
-                           "FILTER ( contains(str(?value), \"resource\") ) " +
-                           "FILTER(langMatches(lang(?label), \"EN\"))" +
-                           "FILTER ( ?value not in ( rdf:type ) ) " +
+                           "FILTER ( contains(str(?value), \"resource\")) " +
+                           "FILTER( langMatches(lang(?label), \"EN\")) " +
+                           "FILTER ( ?value not in ( rdf:type )) " +
+                           $"FILTER (!contains(str(?value), \"resource/{dbr}\")) " +
                            "} " +
                            (limit != null? $"LIMIT {limit}" : string.Empty);
 
@@ -65,6 +66,7 @@ namespace DBPediaNetwork.Services.DBPedia
                            "FILTER(STRSTARTS(STR(?value), \"http://dbpedia.org/property\") || STRSTARTS(STR(?value), \"http://dbpedia.org/ontology\")) " +
                            "FILTER(isLiteral(?label)  && langMatches(lang(?label), \"EN\"))" +
                            "FILTER ( ?value not in ( rdf:type ) ) " +
+                           "FILTER ( !contains(str(?value), \"/color\") && !contains(str(?value), \"/float\") &&  !contains(str(?value), \"/mark\") && !contains(str(?value), \"/position\") ) " +
                            "} " +
                            (limit != null ? $"LIMIT {limit}" : string.Empty);
 

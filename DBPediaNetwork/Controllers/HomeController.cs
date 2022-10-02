@@ -190,7 +190,7 @@ namespace DBPediaNetwork.Controllers
             dbNodes = homeBiz.GetNodes(dbr);
 
             // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
-            if (dbNodes.Count > 0 && !filterModel.refresh)
+            if (dbNodes.Count > 0 && filterModel.refresh == false)
             {
                 if (String.IsNullOrEmpty(nodeDad.label))
                 {
@@ -246,7 +246,7 @@ namespace DBPediaNetwork.Controllers
                 literals = Api.GetLiterals(NormalizaDbr(dbr), filterModel.qtdLiterais);
 
 
-                if (resources.success && (resources?.results?.bindings?.Count() ?? 0) > 0)
+                if (resources != null && resources.success && (resources?.results?.bindings?.Count() ?? 0) > 0)
                 {
                     for (int i = 0; i < resources?.results?.bindings.Count(); i++)
                     {
@@ -270,7 +270,7 @@ namespace DBPediaNetwork.Controllers
                     }
                 }
 
-                if (literals.success && (literals?.results?.bindings?.Count() ?? 0) > 0)
+                if (literals != null && literals.success && (literals?.results?.bindings?.Count() ?? 0) > 0)
                 {
                     for (int i = 0; i < literals?.results?.bindings.Count(); i++)
                     {
