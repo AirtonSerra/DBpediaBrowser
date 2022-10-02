@@ -16,6 +16,13 @@
     },
     removeSomeeAd: () => {
         $("center").remove();
+
+        window.removead = setInterval(function () {
+            if ($("center")) {
+                $("center").remove();
+                clearInterval(window.removead);
+            }
+        }, 1);
     }
 };
 
