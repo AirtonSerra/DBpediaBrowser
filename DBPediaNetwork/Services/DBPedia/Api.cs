@@ -67,7 +67,7 @@ namespace DBPediaNetwork.Services.DBPedia
                            "FILTER(isLiteral(?label)  && langMatches(lang(?label), \"EN\"))" +
                            "FILTER ( ?value not in ( rdf:type ) ) " +
                            "FILTER ( !contains(str(?value), \"/color\") && !contains(str(?value), \"/float\") &&  !contains(str(?value), \"/mark\") && !contains(str(?value), \"/position\") ) " +
-                           "} " +
+                           "}  " +
                            (limit != null ? $"LIMIT {limit}" : string.Empty);
 
             try
