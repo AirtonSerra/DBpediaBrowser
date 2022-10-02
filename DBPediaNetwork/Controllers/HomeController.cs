@@ -190,7 +190,10 @@ namespace DBPediaNetwork.Controllers
             dbNodes = homeBiz.GetNodes(dbr);
 
             // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
-            if (dbNodes.Count > 0 && filterModel.refresh == false)
+            if (dbNodes != null &&
+                dbNodes.Where(w => w.isResource).Count() >=  filterModel.qtdRerouces &&
+                dbNodes.Where(w => !w.isResource).Count() >= filterModel.qtdLiterais &&
+                filterModel.refresh == false)
             {
                 if (String.IsNullOrEmpty(nodeDad.label))
                 {
