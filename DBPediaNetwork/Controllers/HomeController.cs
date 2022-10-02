@@ -16,6 +16,8 @@ using System.Threading.Tasks;
 using VDS.RDF;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
+using DBPediaNetwork.Services.DBPedia.Models;
+using DBPediaNetwork.Services.DBPedia;
 
 namespace DBPediaNetwork.Controllers
 {
@@ -175,6 +177,9 @@ namespace DBPediaNetwork.Controllers
             HomeBiz homeBiz = new HomeBiz(db);
             int? dbIdNodeDad = null;
 
+            ResourceResult resources = new ResourceResult();
+            LiteralsResult literals = new LiteralsResult();
+
             string ssUser = HttpContext.Session.GetString(DBPediaNetwork.Controllers.AuthenticationController.SESSION_KEY_USER);
             if (!String.IsNullOrEmpty(ssUser))
             {
@@ -237,31 +242,18 @@ namespace DBPediaNetwork.Controllers
                     nodeDad.label = GetResourceLabel(nodeDad.source);
                 }
 
-                query = "select distinct ?property ?value where { " +
-                        "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
-                        "filter ( ?property not in ( rdf:type ) ) } " +
-                        "limit 1000";
+                resources = Api.GetResources(NormalizaDbr(dbr), filterModel.qtdRerouces);
+                literals = Api.GetLiterals(NormalizaDbr(dbr), filterModel.qtdLiterais);
 
-                results = ExecutSPARQLQuery(query);
 
-                if (results != null)
+                if (resources.success && (resources?.results?.bindings?.Count() ?? 0) > 0)
                 {
-                    foreach (SparqlResult result in results.Where(w => !w.ToString().ToLower().Contains("template"))) // Não traz mais as propriedades Template
-                    {
-                        arrAux = result.ToString().Split(" , ");
-                        strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
-                    }
-
-                    lstResources = strDataBase.Where(w => w.value.Contains("resource/")).Take(filterModel.qtdRerouces).ToList();
-                    lstLiterais = strDataBase.Where(w => !w.value.Contains("http") && (w.value.Contains("@en") || !w.value.Contains("@")) && w.value.Length < 40 && w.property.Contains("property")).Take(filterModel.qtdRerouces).ToList();
-
-
-                    for (int i = 0; i < lstResources.Count(); i++)
+                    for (int i = 0; i < resources?.results?.bindings.Count(); i++)
                     {
                         node = new Node();
                         node.id = netWorkData.getNodeId();
-                        node.label = GetResourceLabel(lstResources[i].value);
-                        node.source = lstResources[i].value;
+                        node.label = resources?.results?.bindings[i].label.value;
+                        node.source = resources?.results?.bindings[i].value.value;
                         node.color = color;
                         node.idDad = nodeDad.id;
                         node.isResource = true;
@@ -276,13 +268,16 @@ namespace DBPediaNetwork.Controllers
                             color = node.color
                         });
                     }
+                }
 
-                    for (int i = 0; i < lstLiterais.Count(); i++)
+                if (literals.success && (literals?.results?.bindings?.Count() ?? 0) > 0)
+                {
+                    for (int i = 0; i < literals?.results?.bindings.Count(); i++)
                     {
                         node = new Node();
                         node.id = netWorkData.getNodeId();
-                        node.label = GetLiteralLabel(lstLiterais[i]);
-                        node.source = lstLiterais[i].property;
+                        node.label = GetLiteralLabel(literals?.results?.bindings[i].label.value);
+                        node.source = literals?.results?.bindings[i].value.value;
                         node.color = color;
                         node.idDad = nodeDad.id;
                         node.shape = "box";
@@ -297,29 +292,30 @@ namespace DBPediaNetwork.Controllers
                             to = nodeDad.id,
                             length = EDGE_LENGTH,
                             color = node.color,
-                            label = GetEdgeLabel(lstLiterais[i])
+                            label = GetEdgeLabel(literals?.results?.bindings[i].value.value)
                         });
                     }
+                }
 
-                    // Insere os novos Nodes no banco.
-                    if (nodeDad.idDad == null)
-                    {
-                        dbIdNodeDad = homeBiz.InsertNode(nodeDad);
-                    }
-                    else
-                    {
-                        dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
-                    }
+                // Insere os novos Nodes no banco.
+                if (nodeDad.idDad == null)
+                {
+                    dbIdNodeDad = homeBiz.InsertNode(nodeDad);
+                }
+                else
+                {
+                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                }
 
 
-                    if (dbIdNodeDad != null)
+                if (dbIdNodeDad != null)
+                {
+                    foreach (var item in dbNewNodes)
                     {
-                        foreach (var item in dbNewNodes)
-                        {
-                            homeBiz.InsertNodeChild(item, dbIdNodeDad);
-                        }
+                        homeBiz.InsertNodeChild(item, dbIdNodeDad);
                     }
                 }
+
             }
 
             if (dbIdNodeDad == null)
@@ -372,9 +368,27 @@ namespace DBPediaNetwork.Controllers
             return aux.Trim();
         }
 
+        private string GetLiteralLabel(string result)
+        {
+            var aux = result;
+            if (aux.Contains("@"))
+            {
+                aux = aux.Split("@")[0];
+            }
+
+            return aux.Trim();
+        }
+
         private string GetEdgeLabel(ResultMainQuerySparqlModel result)
         {
             var aux = result.property.Split("/property/")[1];
+
+            return aux.Trim();
+        }
+
+        private string GetEdgeLabel(string result)
+        {
+            var aux = result.Split("/property/")[1];
 
             return aux.Trim();
         }

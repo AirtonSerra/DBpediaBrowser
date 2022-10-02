@@ -33,7 +33,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_GET_POPULARS_NODES_BY_KEY('{dbr}')", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_GET_POPULARS_NODES_BY_KEY('{MySqlHelper.EscapeString(dbr)}')", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -87,7 +87,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label.Trim()}', '{node.source.Trim()}', {(node.isResource ? 1 : 0)})", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{MySqlHelper.EscapeString(node.label.Trim())}', '{MySqlHelper.EscapeString(node.source.Trim())}', {(node.isResource ? 1 : 0)})", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -111,7 +111,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
 
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_NODE_ID_BY_URI('{nodeDad.source.Trim()}')", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_NODE_ID_BY_URI('{MySqlHelper.EscapeString(nodeDad.source.Trim())}')", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -135,7 +135,7 @@ namespace DBPediaNetwork.Biz
 
             MySqlConnection conn = GetConnection();
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{node.label.Trim()}', '{node.source.Trim()}', {(node.isResource ? 1 : 0)})", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_INS_NODE('{MySqlHelper.EscapeString(node.label.Trim())}', '{MySqlHelper.EscapeString(node.source.Trim())}', {(node.isResource ? 1 : 0)})", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
@@ -196,7 +196,7 @@ namespace DBPediaNetwork.Biz
             MySqlConnection conn = GetConnection();
             conn.Open();
 
-            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_LABEL_NODE('{nodeDad.source}')", conn);
+            MySqlCommand cmd = new MySqlCommand($"CALL P_SEL_LABEL_NODE('{MySqlHelper.EscapeString(nodeDad.source)}')", conn);
 
             using (var reader = cmd.ExecuteReader())
             {
