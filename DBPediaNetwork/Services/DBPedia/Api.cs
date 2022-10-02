@@ -57,7 +57,7 @@ namespace DBPediaNetwork.Services.DBPedia
             return modelResult;
         }
 
-        public static LiteralsResult GetLiterals(string dbr, int limit)
+        public static LiteralsResult GetLiterals(string dbr, int? limit)
         {
             LiteralsResult modelResult;
             string query = "SELECT DISTINCT ?value ?label " +
