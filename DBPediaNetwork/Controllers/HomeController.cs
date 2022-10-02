@@ -381,14 +381,39 @@ namespace DBPediaNetwork.Controllers
 
         private string GetEdgeLabel(ResultMainQuerySparqlModel result)
         {
-            var aux = result.property.Split("/property/")[1];
+            var aux = string.Empty;
+
+            if (result.property.Contains("/property/"))
+            {
+                aux = result.property.Split("/property/")[1];
+            }
+            else if (result.property.Contains("/ontology/"))
+            {
+                aux = result.property.Split("/ontology/")[1];
+            }
+            else
+            {
+                aux = result.property;
+            }
 
             return aux.Trim();
         }
 
         private string GetEdgeLabel(string result)
         {
-            var aux = result.Split("/property/")[1];
+            var aux = string.Empty;
+            if (result.Contains("/property/"))
+            {
+                aux = result.Split("/property/")[1];
+            }
+            else if (result.Contains("/ontology/"))
+            {
+                aux = result.Split("/ontology/")[1];
+            }
+            else
+            {
+                aux = result;
+            }
 
             return aux.Trim();
         }
