@@ -1,6 +1,6 @@
 ﻿var app = {
     init: function () {
-
+        app.removeSomeeAd();
     },
     preloader: function (action, ms = 500) {
         var display = $('.preloader').css('display');
@@ -13,6 +13,9 @@
             $('.modal.preloader').modal('hide');
             }, ms);
         }
+    },
+    removeSomeeAd: () => {
+        $("center").remove();
     }
 };
 
