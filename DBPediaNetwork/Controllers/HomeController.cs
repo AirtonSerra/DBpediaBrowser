@@ -376,6 +376,11 @@ namespace DBPediaNetwork.Controllers
                 aux = aux.Split("@")[0];
             }
 
+            if (aux.Length > 50)
+            {
+                aux = aux.Substring(0, 49) + "...";
+            }
+
             return aux.Trim();
         }
 
