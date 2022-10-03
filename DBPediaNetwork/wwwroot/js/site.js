@@ -16,13 +16,26 @@
     },
     removeSomeeAd: () => {
         $("center").remove();
+        $("footer ~ div").remove();
 
-        window.removead = setInterval(function () {
+        window.removead1 = setInterval(function () {
             if ($("center")) {
                 $("center").remove();
-                clearInterval(window.removead);
+                $("footer ~ div").remove();
+                clearInterval(window.removead1);
             }
         }, 1);
+
+        window.removead2 = setInterval(function () {
+            if ($("footer ~ div:not(.modal)")) {
+                $("footer ~ div:not(.modal)").remove();
+            }
+        }, 1);
+
+        setTimeout(function () {
+            clearInterval(window.removead1);
+            clearInterval(window.removead2);
+        }, 3000);
     }
 };
 
