@@ -75,6 +75,7 @@ namespace DBPediaNetwork.Controllers
             //nodePrincipal.label = GetResourceLabel(filterModel.pesquisa);
             nodePrincipal.source = filterModel.pesquisa;
             nodePrincipal.clicked = true;
+            nodePrincipal.isResource = true;
             nodePrincipal.idDad = null;
 
             netWorkData.nodes.Add(nodePrincipal);
@@ -300,17 +301,16 @@ namespace DBPediaNetwork.Controllers
                     }
                 }
 
-                // Insere os novos Nodes no banco.
-                if (nodeDad.idDad == null)
+                // Procura o Nó pai no banco.
+                dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+
+                // Se não existir, insere o node pai no banco, recuperando seu ID do banco. 
+                if(dbIdNodeDad == null)
                 {
                     dbIdNodeDad = homeBiz.InsertNode(nodeDad);
                 }
-                else
-                {
-                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
-                }
 
-
+                // Insere os novos nodes filhos no banco.
                 if (dbIdNodeDad != null)
                 {
                     foreach (var item in dbNewNodes)
@@ -357,7 +357,7 @@ namespace DBPediaNetwork.Controllers
                 }
 
             }
-            return label;
+            return label.Trim();
         }
 
         private string GetLiteralLabel(ResultMainQuerySparqlModel result)
