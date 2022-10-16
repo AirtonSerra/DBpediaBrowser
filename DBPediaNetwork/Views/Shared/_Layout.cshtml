@@ -29,10 +29,10 @@
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container">
                 <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">DBPediaNetwork</a>
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+@*                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
-                </button>
+                </button>*@
 
                 @*Deslogado*@
                 @if (user == null)
@@ -40,13 +40,13 @@
                     <div class="navbar-collapse collapse float-right">
                         <ul class="navbar-nav flex-grow-1" style="margin-left: 80%;">
 
-                            <li class="nav-item">
+                           @* <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Index">Login</a>
                             </li>
 
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-area="" asp-controller="Authentication" asp-action="Register">Registrar</a>
-                            </li>
+                            </li>*@
 
                             @*<li class="nav-item">
                                     <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
@@ -89,7 +89,7 @@
         </div>*@
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2022 - DBPediaNetwork - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; @DateTime.Now.Year - DBPediaNetwork @*- <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>*@
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
