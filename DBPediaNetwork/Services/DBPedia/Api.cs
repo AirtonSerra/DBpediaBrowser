@@ -66,7 +66,15 @@ namespace DBPediaNetwork.Services.DBPedia
                            "FILTER(STRSTARTS(STR(?value), \"http://dbpedia.org/property\") || STRSTARTS(STR(?value), \"http://dbpedia.org/ontology\")) " +
                            "FILTER(isLiteral(?label)  && langMatches(lang(?label), \"EN\"))" +
                            "FILTER ( ?value not in ( rdf:type ) ) " +
-                           "FILTER ( !contains(str(?value), \"/color\") && !contains(str(?value), \"/float\") &&  !contains(str(?value), \"/mark\") && !contains(str(?value), \"/position\") ) " +
+                           "FILTER ( !contains(str(?value), \"/color\") && " +
+                           "!contains(str(?value), \"/float\") &&  " +
+                           "!contains(str(?value), \"/mark\") && " +
+                           "!contains(str(?value), \"/align\") && " +
+                           "!contains(str(?value), \"/align\") && " +
+                           "!contains(str(?value), \"/labelPosition\") && " +
+                           "!contains(str(?value), \"/image\") && " +
+                           "!contains(str(?value), \"/position\") && " +
+                           "str(?label) != \"\") " +
                            "} " +
                            (limit != null ? $"LIMIT {limit}" : string.Empty);
 
