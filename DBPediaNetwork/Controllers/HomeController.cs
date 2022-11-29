@@ -23,6 +23,7 @@ namespace DBPediaNetwork.Controllers
 {
     public class HomeController : Controller
     {
+        private const bool use_db = false;
         private const int EDGE_LENGTH = 300;
         private const string KEY_NETWORK_DATA = "networkData";
         private const string KEY_DATABASE = "DATABASE";
@@ -42,7 +43,16 @@ namespace DBPediaNetwork.Controllers
             HttpContext.Session.Remove("arrColors");
             HttpContext.Session.Remove("arrColorsUsed");
             HomeBiz homeBiz = new HomeBiz(db);
-            HomeIndexModel model = new HomeIndexModel(homeBiz.GetAutocompleteSource());
+            HomeIndexModel model = null;
+
+            if (use_db)
+            {
+                model = new HomeIndexModel(homeBiz.GetAutocompleteSource());
+            }
+            else
+            {
+                model = new HomeIndexModel();
+            }
 
 
             return View(model);
@@ -188,11 +198,12 @@ namespace DBPediaNetwork.Controllers
             }
 
             // Consulta se este dbr já está registrado no banco e traz seus filhos, se existirem.
-            dbNodes = homeBiz.GetNodes(dbr);
+            if (use_db) dbNodes = homeBiz.GetNodes(dbr);
 
             // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
-            if (dbNodes != null &&
-                dbNodes.Where(w => w.isResource).Count() >=  filterModel.qtdRerouces &&
+            if (use_db &&
+                dbNodes != null &&
+                dbNodes.Where(w => w.isResource).Count() >= filterModel.qtdRerouces &&
                 dbNodes.Where(w => !w.isResource).Count() >= filterModel.qtdLiterais &&
                 filterModel.refresh == false)
             {
@@ -301,36 +312,41 @@ namespace DBPediaNetwork.Controllers
                     }
                 }
 
-                // Procura o Nó pai no banco.
-                dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
-
-                // Se não existir, insere o node pai no banco, recuperando seu ID do banco. 
-                if(dbIdNodeDad == null)
+                if (use_db)
                 {
-                    dbIdNodeDad = homeBiz.InsertNode(nodeDad);
-                }
+                    // Procura o Nó pai no banco.
+                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
 
-                // Insere os novos nodes filhos no banco.
-                if (dbIdNodeDad != null)
-                {
-                    foreach (var item in dbNewNodes)
+                    // Se não existir, insere o node pai no banco, recuperando seu ID do banco. 
+                    if (dbIdNodeDad == null)
                     {
-                        homeBiz.InsertNodeChild(item, dbIdNodeDad);
+                        dbIdNodeDad = homeBiz.InsertNode(nodeDad);
+                    }
+
+                    // Insere os novos nodes filhos no banco.
+                    if (dbIdNodeDad != null)
+                    {
+                        foreach (var item in dbNewNodes)
+                        {
+                            homeBiz.InsertNodeChild(item, dbIdNodeDad);
+                        }
                     }
                 }
-
             }
 
-            if (dbIdNodeDad == null)
+            if (use_db)
             {
-                dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                if (dbIdNodeDad == null)
+                {
+                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                }
+
+                // Registra no banco que o node foi clickado.
+                homeBiz.RisterPopularNode(dbIdNodeDad.Value, user);
+
+                db.Close();
+                db.Dispose();
             }
-
-            // Registra no banco que o node foi clickado.
-            homeBiz.RisterPopularNode(dbIdNodeDad.Value, user);
-
-            db.Close();
-            db.Dispose();
 
             netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
         }
