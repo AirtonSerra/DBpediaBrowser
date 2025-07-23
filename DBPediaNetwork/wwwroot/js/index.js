@@ -8,12 +8,15 @@
     },
     setCanvasHeight: function () {
         $(window).resize(function () {
-            if ($('#mynetwork').length) {
-                $('#mynetwork').css("height", 0);
-                let height = ($('#mynetwork').offset().top - $('footer').offset().top) * -1;
-                $('#mynetwork').css("height", height - 1);
-            }
+            appIndex.resizeCanvas();
         }).trigger('resize');
+    },
+    resizeCanvas: () => {
+        if ($('#mynetwork').length) {
+            $('#mynetwork').css("height", 0);
+            let height = ($('#mynetwork').offset().top - $('footer').offset().top) * -1;
+            $('#mynetwork').css("height", height);
+        }
     },
     buttonFunctions: () => {
         $("#btnSearch").click(function (e) {
@@ -92,6 +95,7 @@
             { filterModel: objPost },
             function (result) {
                 appIndex.buildChart(result);
+                appIndex.resizeCanvas();
                 app.preloader("off");
             })
             .fail(function (result) {

@@ -16,11 +16,14 @@ using System.Threading.Tasks;
 using VDS.RDF;
 using VDS.RDF.Parsing;
 using VDS.RDF.Query;
+using DBPediaNetwork.Services.DBPedia.Models;
+using DBPediaNetwork.Services.DBPedia;
 
 namespace DBPediaNetwork.Controllers
 {
     public class HomeController : Controller
     {
+        private const bool use_db = false;
         private const int EDGE_LENGTH = 300;
         private const string KEY_NETWORK_DATA = "networkData";
         private const string KEY_DATABASE = "DATABASE";
@@ -40,7 +43,16 @@ namespace DBPediaNetwork.Controllers
             HttpContext.Session.Remove("arrColors");
             HttpContext.Session.Remove("arrColorsUsed");
             HomeBiz homeBiz = new HomeBiz(db);
-            HomeIndexModel model = new HomeIndexModel(homeBiz.GetAutocompleteSource());
+            HomeIndexModel model = null;
+
+            if (use_db)
+            {
+                model = new HomeIndexModel(homeBiz.GetAutocompleteSource());
+            }
+            else
+            {
+                model = new HomeIndexModel();
+            }
 
 
             return View(model);
@@ -73,6 +85,7 @@ namespace DBPediaNetwork.Controllers
             //nodePrincipal.label = GetResourceLabel(filterModel.pesquisa);
             nodePrincipal.source = filterModel.pesquisa;
             nodePrincipal.clicked = true;
+            nodePrincipal.isResource = true;
             nodePrincipal.idDad = null;
 
             netWorkData.nodes.Add(nodePrincipal);
@@ -175,6 +188,9 @@ namespace DBPediaNetwork.Controllers
             HomeBiz homeBiz = new HomeBiz(db);
             int? dbIdNodeDad = null;
 
+            ResourceResult resources = new ResourceResult();
+            LiteralsResult literals = new LiteralsResult();
+
             string ssUser = HttpContext.Session.GetString(DBPediaNetwork.Controllers.AuthenticationController.SESSION_KEY_USER);
             if (!String.IsNullOrEmpty(ssUser))
             {
@@ -182,10 +198,14 @@ namespace DBPediaNetwork.Controllers
             }
 
             // Consulta se este dbr já está registrado no banco e traz seus filhos, se existirem.
-            dbNodes = homeBiz.GetNodes(dbr);
+            if (use_db) dbNodes = homeBiz.GetNodes(dbr);
 
             // Se não houver dados no banco ou o usuário solicitar o refresh dos dados.
-            if (dbNodes.Count > 0 && !filterModel.refresh)
+            if (use_db &&
+                dbNodes != null &&
+                dbNodes.Where(w => w.isResource).Count() >= filterModel.qtdRerouces &&
+                dbNodes.Where(w => !w.isResource).Count() >= filterModel.qtdLiterais &&
+                filterModel.refresh == false)
             {
                 if (String.IsNullOrEmpty(nodeDad.label))
                 {
@@ -237,31 +257,18 @@ namespace DBPediaNetwork.Controllers
                     nodeDad.label = GetResourceLabel(nodeDad.source);
                 }
 
-                query = "select distinct ?property ?value where { " +
-                        "dbr:" + NormalizaDbr(dbr) + " ?property ?value . " +
-                        "filter ( ?property not in ( rdf:type ) ) } " +
-                        "limit 1000";
+                resources = Api.GetResources(NormalizaDbr(dbr), filterModel.qtdRerouces);
+                literals = Api.GetLiterals(NormalizaDbr(dbr), filterModel.qtdLiterais);
 
-                results = ExecutSPARQLQuery(query);
 
-                if (results != null)
+                if (resources != null && resources.success && (resources?.results?.bindings?.Count() ?? 0) > 0)
                 {
-                    foreach (SparqlResult result in results.Where(w => !w.ToString().ToLower().Contains("template"))) // Não traz mais as propriedades Template
-                    {
-                        arrAux = result.ToString().Split(" , ");
-                        strDataBase.Add(new ResultMainQuerySparqlModel { property = arrAux[0].Replace("?property =", ""), value = arrAux[1].Replace("?value =", "") });
-                    }
-
-                    lstResources = strDataBase.Where(w => w.value.Contains("resource/")).Take(filterModel.qtdRerouces).ToList();
-                    lstLiterais = strDataBase.Where(w => !w.value.Contains("http") && (w.value.Contains("@en") || !w.value.Contains("@")) && w.value.Length < 40 && w.property.Contains("property")).Take(filterModel.qtdRerouces).ToList();
-
-
-                    for (int i = 0; i < lstResources.Count(); i++)
+                    for (int i = 0; i < resources?.results?.bindings.Count(); i++)
                     {
                         node = new Node();
                         node.id = netWorkData.getNodeId();
-                        node.label = GetResourceLabel(lstResources[i].value);
-                        node.source = lstResources[i].value;
+                        node.label = resources?.results?.bindings[i].label.value;
+                        node.source = resources?.results?.bindings[i].value.value;
                         node.color = color;
                         node.idDad = nodeDad.id;
                         node.isResource = true;
@@ -276,13 +283,16 @@ namespace DBPediaNetwork.Controllers
                             color = node.color
                         });
                     }
+                }
 
-                    for (int i = 0; i < lstLiterais.Count(); i++)
+                if (literals != null && literals.success && (literals?.results?.bindings?.Count() ?? 0) > 0)
+                {
+                    for (int i = 0; i < literals?.results?.bindings.Count(); i++)
                     {
                         node = new Node();
                         node.id = netWorkData.getNodeId();
-                        node.label = GetLiteralLabel(lstLiterais[i]);
-                        node.source = lstLiterais[i].property;
+                        node.label = GetLiteralLabel(literals?.results?.bindings[i].label.value);
+                        node.source = literals?.results?.bindings[i].value.value;
                         node.color = color;
                         node.idDad = nodeDad.id;
                         node.shape = "box";
@@ -297,21 +307,23 @@ namespace DBPediaNetwork.Controllers
                             to = nodeDad.id,
                             length = EDGE_LENGTH,
                             color = node.color,
-                            label = GetEdgeLabel(lstLiterais[i])
+                            label = GetEdgeLabel(literals?.results?.bindings[i].value.value)
                         });
                     }
+                }
 
-                    // Insere os novos Nodes no banco.
-                    if (nodeDad.idDad == null)
+                if (use_db)
+                {
+                    // Procura o Nó pai no banco.
+                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+
+                    // Se não existir, insere o node pai no banco, recuperando seu ID do banco. 
+                    if (dbIdNodeDad == null)
                     {
                         dbIdNodeDad = homeBiz.InsertNode(nodeDad);
                     }
-                    else
-                    {
-                        dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
-                    }
 
-
+                    // Insere os novos nodes filhos no banco.
                     if (dbIdNodeDad != null)
                     {
                         foreach (var item in dbNewNodes)
@@ -322,16 +334,19 @@ namespace DBPediaNetwork.Controllers
                 }
             }
 
-            if (dbIdNodeDad == null)
+            if (use_db)
             {
-                dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                if (dbIdNodeDad == null)
+                {
+                    dbIdNodeDad = homeBiz.GetNodeDbID(nodeDad);
+                }
+
+                // Registra no banco que o node foi clickado.
+                homeBiz.RisterPopularNode(dbIdNodeDad.Value, user);
+
+                db.Close();
+                db.Dispose();
             }
-
-            // Registra no banco que o node foi clickado.
-            homeBiz.RisterPopularNode(dbIdNodeDad.Value, user);
-
-            db.Close();
-            db.Dispose();
 
             netWorkData.nodes.Where(w => w.id == nodeDad.id).FirstOrDefault().color = color;
         }
@@ -358,7 +373,7 @@ namespace DBPediaNetwork.Controllers
                 }
 
             }
-            return label;
+            return label.Trim();
         }
 
         private string GetLiteralLabel(ResultMainQuerySparqlModel result)
@@ -372,9 +387,57 @@ namespace DBPediaNetwork.Controllers
             return aux.Trim();
         }
 
+        private string GetLiteralLabel(string result)
+        {
+            var aux = result;
+            if (aux.Contains("@"))
+            {
+                aux = aux.Split("@")[0];
+            }
+
+            if (aux.Length > 50)
+            {
+                aux = aux.Substring(0, 49) + "...";
+            }
+
+            return aux.Trim();
+        }
+
         private string GetEdgeLabel(ResultMainQuerySparqlModel result)
         {
-            var aux = result.property.Split("/property/")[1];
+            var aux = string.Empty;
+
+            if (result.property.Contains("/property/"))
+            {
+                aux = result.property.Split("/property/")[1];
+            }
+            else if (result.property.Contains("/ontology/"))
+            {
+                aux = result.property.Split("/ontology/")[1];
+            }
+            else
+            {
+                aux = result.property;
+            }
+
+            return aux.Trim();
+        }
+
+        private string GetEdgeLabel(string result)
+        {
+            var aux = string.Empty;
+            if (result.Contains("/property/"))
+            {
+                aux = result.Split("/property/")[1];
+            }
+            else if (result.Contains("/ontology/"))
+            {
+                aux = result.Split("/ontology/")[1];
+            }
+            else
+            {
+                aux = result;
+            }
 
             return aux.Trim();
         }

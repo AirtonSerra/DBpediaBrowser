@@ -11,6 +11,7 @@ namespace DBPediaNetwork.Models.Home
 
         public HomeIndexModel()
         {
+            this.autocompleteSource = new List<string>();
         }
 
         public HomeIndexModel(List<string> arrNodeName)
