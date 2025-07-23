@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.32002.261
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBPediaNetwork", "DBPediaNetwork\DBPediaNetwork.csproj", "{03736D70-4CDC-4CE1-86AC-E9926F20D69B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DBPediaNetwork", "DBPediaBrowser\DBPediaNetwork.csproj", "{03736D70-4CDC-4CE1-86AC-E9926F20D69B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
