@@ -2,7 +2,6 @@ DBPediaNetwork/bin/
 .vs/
 DBPediaNetwork/obj/
 *.user
-.vscode/launch.json
-.vscode/tasks.json
-DBPediaBrowser/bin
-DBPediaBrowser/obj
+.vscode/
+DBPediaBrowser/bin/
+DBPediaBrowser/obj/
