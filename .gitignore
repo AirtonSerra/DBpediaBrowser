@@ -5,3 +5,5 @@ DBPediaNetwork/obj/
 .vscode/
 DBPediaBrowser/bin/
 DBPediaBrowser/obj/
+temp/bin/
+temp/obj/
