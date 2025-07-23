@@ -1,7 +1,7 @@
 DBPediaNetwork/bin/
-.vs/
 DBPediaNetwork/obj/
-*.user
+DBpediaBrowser/bin/
+DBpediaBrowser/obj/
+.vs/
 .vscode/
-DBPediaBrowser/bin/
-DBPediaBrowser/obj/
+*.user
