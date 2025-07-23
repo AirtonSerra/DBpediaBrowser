@@ -14,33 +14,33 @@
         margin: 0 auto;
     }
 
-        .form-register .checkbox {
-            font-weight: 400;
-        }
+    .form-register .checkbox {
+        font-weight: 400;
+    }
 
-        .form-register .form-control {
-            position: relative;
-            box-sizing: border-box;
-            height: auto;
-            padding: 10px;
-            font-size: 16px;
-        }
+    .form-register .form-control {
+        position: relative;
+        box-sizing: border-box;
+        height: auto;
+        padding: 10px;
+        font-size: 16px;
+    }
 
-            .form-register .form-control:focus {
-                z-index: 2;
-            }
+    .form-register .form-control:focus {
+        z-index: 2;
+    }
 
-        .form-register input[type="email"] {
-            margin-bottom: -1px;
-            border-bottom-right-radius: 0;
-            border-bottom-left-radius: 0;
-        }
+    .form-register input[type="email"] {
+        margin-bottom: -1px;
+        border-bottom-right-radius: 0;
+        border-bottom-left-radius: 0;
+    }
 
-        .form-register input[type="password"] {
-            margin-bottom: 10px;
-            border-top-left-radius: 0;
-            border-top-right-radius: 0;
-        }
+    .form-register input[type="password"] {
+        margin-bottom: 10px;
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
 
     .nav-pills .nav-link {
         border-radius: 0.25rem;
@@ -50,7 +50,7 @@
         line-height: 1;
         background-color: #f5f5f5;
         font-weight: 500;
-        color: rgba(0,0,0,.6);
+        color: rgba(0, 0, 0, .6);
         margin: 0.5rem;
     }
 </style>
@@ -63,18 +63,19 @@
         <ul class="nav nav-pills nav-justified mb-3 form-register" id="ex1" role="tablist">
             <li class="nav-item" role="presentation">
                 <a class="nav-link" id="tab-login" asp-controller="Authentication" asp-action="Index" role="tab"
-                   aria-controls="pills-login" aria-selected="true">Login</a>
+                    aria-controls="pills-login" aria-selected="true">Login</a>
             </li>
             <li class="nav-item" role="presentation">
-                <a class="nav-link active" id="tab-register" disabled="disabled" asp-controller="Authentication" asp-action="Register" role="tab"
-                   aria-controls="pills-register" aria-selected="false">Registrar</a>
+                <a class="nav-link active" id="tab-register" disabled="disabled" asp-controller="Authentication"
+                    asp-action="Register" role="tab" aria-controls="pills-register" aria-selected="false">Register</a>
             </li>
         </ul>
 
         <form class="form-register" asp-controller="Authentication" asp-action="Register" method="post">
-            <!-- Email input -->
+            <!-- Name input -->
             <div class="form-outline mb-4">
-                <input type="text" maxlength="100" name="name" id="form2Example1" class="form-control" placeholder="Nome" required />
+                <input type="text" maxlength="100" name="name" id="form2Example1" class="form-control"
+                    placeholder="Name" required />
             </div>
 
             <!-- Email input -->
@@ -84,16 +85,18 @@
 
             <!-- Password input -->
             <div class="form-outline mb-4">
-                <input type="password" name="password" id="form2Example2" class="form-control" placeholder="Senha" required />
+                <input type="password" name="password" id="form2Example2" class="form-control" placeholder="Password"
+                    required />
             </div>
 
             <!-- Confirm Password -->
             <div class="form-outline mb-4">
-                <input type="password" name="cpassword" id="form2Example2" class="form-control" placeholder="Confirmar senha" required />
+                <input type="password" name="cpassword" id="form2Example2" class="form-control"
+                    placeholder="Confirm password" required />
             </div>
 
             <!-- Validation button -->
-            <button type="button" class="btn btn-primary btn-block mb-4" onclick="Registration()">Registrar</button>
+            <button type="button" class="btn btn-primary btn-block mb-4" onclick="Registration()">Register</button>
 
             <!-- Submit button -->
             <button type="submit" id="true-submit" style="display:none"></button>
@@ -117,34 +120,18 @@
                 $("[name='cpassword']").val("");
                 $(".form-register div").addClass("was-validated");
 
-                $("[name='output-error']").text("A confirmação de senha deve ser igual a senha.");
+                $("[name='output-error']").text("Password confirmation must match the password.");
             }
             else {
                 $("[name='output-error']").text("");
 
                 $("#true-submit").click();
-
-                //let model = {
-                //    name: $("[name='name']").val(),
-                //    email: $("[name='email']").val(),
-                //    password: $("[name='password']").val()
-                //}
-
-
-                //$.post("/Authentication/RegisterUser",
-                //    { user: model },
-                //    function (result) {
-                //    })
-                //    .fail(function (result) {
-                //        console.log("Ocorreu um erro ao tentar registrar.");
-                //        app.preloader("off");
-                //    });
             }
 
         }
         else {
             $(".form-register div").addClass("was-validated");
-            $("[name='output-error']").text("Campos obrigatórios inválidos.");
+            $("[name='output-error']").text("Required fields are invalid.");
         }
     }
 </script>
