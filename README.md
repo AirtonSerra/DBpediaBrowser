@@ -38,6 +38,9 @@ dotnet run --project DBpediaBrowser/DBpediaBrowser.csproj
 
 Or open the `DBpediaBrowser` project in Visual Studio and run (F5).
 
+## Live demo
+The application is available online at: https://dbpediabrowser.onrender.com
+
 ## Important endpoints / routes
 - GET / or /Home/Index - main page with search
 - POST /Home/Search - perform a search and build network data
