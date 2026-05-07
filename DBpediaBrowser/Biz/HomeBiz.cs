@@ -37,8 +37,6 @@ namespace DBPediaNetwork.Biz
 
             using (var reader = cmd.ExecuteReader())
             {
-                //reader.NextResult();
-                //DataTable dt1 = teste.CopyToDataTable();
                 while (reader.Read())
                 {
                     node = new Node();
