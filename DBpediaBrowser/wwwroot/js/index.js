@@ -1,5 +1,6 @@
 ﻿var appIndex = {
     data: null,
+    network: null,
     init: function () {
         appIndex.setCanvasHeight();
         appIndex.buttonFunctions();
@@ -87,6 +88,10 @@
                     app.preloader("off");
                 });
         }
+
+        $("#btnExport").click(function () {
+            appIndex.exportGraph();
+        });
     },
     searchPost: function (objPost, endpoint = "Search") {
         app.preloader("on");
@@ -107,6 +112,11 @@
     buildChart: function (data) {
         if (data != null) {
             appIndex.data = data;
+
+            if (data.nodes.length > 0)
+                $("#btnExport").show();
+            else
+                $("#btnExport").hide();
 
             // Destaques para nodes Literais.
             data.nodes.forEach(function (node) {
@@ -132,9 +142,9 @@
 
             var container = document.getElementById("mynetwork");
             var options = {};
-            var network = new vis.Network(container, data, options);
+            appIndex.network = new vis.Network(container, data, options);
 
-            network.on('click', function (properties) {
+            appIndex.network.on('click', function (properties) {
                 var nodeid = properties.nodes[0];
                 if (nodeid > 0) {
                     clickedNode = appIndex.data.nodes.find(obj => { return obj.id === nodeid });
@@ -155,9 +165,9 @@
                 }
             });
 
-            network.on("oncontext", function (params) {
+            appIndex.network.on("oncontext", function (params) {
                 params.event.preventDefault();
-                let nodeid = network.getNodeAt(params.pointer.DOM);
+                let nodeid = appIndex.network.getNodeAt(params.pointer.DOM);
                 var clickedNode = appIndex.data.nodes.find(obj => { return obj.id === nodeid });
                 if (clickedNode) {
                     if (clickedNode.source.includes("resource/")) {
@@ -254,6 +264,178 @@
         $("#inpSearch").autocomplete({
             source: source
         });
+    },
+    exportGraph: function () {
+        //Gera manualmente o SVG
+        //O vis mantém um canvas interno inacessível
+
+        if (!appIndex.network || !appIndex.data)
+            return;
+
+        //Largura svg
+        const positions = appIndex.network.getPositions();
+
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        
+        appIndex.data.nodes.forEach(node => {
+            const p = positions[node.id];
+            if (!p)
+                return;
+
+            const shape = appIndex.network.body.nodes[node.id].shape;
+            const box = shape.boundingBox;
+
+            minX = Math.min(minX, p.x + box.left);
+            minY = Math.min(minY, p.y + box.top);
+
+            maxX = Math.max(maxX, p.x + box.right);
+            maxY = Math.max(maxY, p.y + box.bottom);
+
+        });
+        
+        const margin = 40;
+
+        minX -= margin;
+        minY -= margin;
+        maxX += margin;
+        maxY += margin;
+
+        const width = maxX - minX;
+        const height = maxY - minY;
+
+        let svg = [];
+
+        svg.push(`<svg xmlns="http://www.w3.org/2000/svg"
+            width="${width}"
+            height="${height}"
+            viewBox="${minX} ${minY} ${width} ${height}">`
+        );
+
+        svg.push(`<style>
+            text{
+                font-family: Arial;
+                font-size:14px;
+            }
+            </style>`
+        );
+
+        // Arestas
+
+        appIndex.data.edges.forEach(edge => {
+
+            const from = positions[edge.from];
+            const to = positions[edge.to];
+
+            if (!from || !to)
+                return;
+
+            svg.push(`<line
+                    x1="${from.x}"
+                    y1="${from.y}"
+                    x2="${to.x}"
+                    y2="${to.y}"
+                    stroke="${edge.color}"
+                    stroke-width="1.0"
+                />`
+            );
+
+            if (edge.label) {
+                const mx = (from.x + to.x) / 2;
+                const my = (from.y + to.y) / 2;
+
+                svg.push(`
+                <text
+                    x="${mx}"
+                    y="${my-4}"
+                    text-anchor="middle"
+                    fill="#444">
+                ${edge.label}
+                </text>`);
+            }
+
+        });
+
+        // Nós
+        appIndex.data.nodes.forEach(node => {
+            const p = positions[node.id];
+            if (!p)
+                return;
+
+            const internalNode = appIndex.network.body.nodes[node.id];
+            const shape = internalNode.shape;
+            const width = shape.width;
+            const height = shape.height;
+
+            if (node.shape === "box") {
+                svg.push(`<rect
+                        x="${p.x - width / 2}"
+                        y="${p.y - height / 2}"
+                        width="${width}"
+                        height="${height}"
+                        rx="4"
+                        fill="${typeof node.color === "object"
+                                ? node.color.background
+                                : node.color}"
+                        stroke="${typeof node.color === "object"
+                                    ? node.color.border
+                                    : node.color}"
+                        stroke-width="1.5"
+                    />`);
+            }
+            else {
+                svg.push(`<ellipse
+                    cx="${p.x}"
+                    cy="${p.y}"
+                    rx="${width / 2}"
+                    ry="${height / 2}"
+                    fill="${typeof node.color === "object"
+                                ? node.color.background
+                                : node.color}"
+                    stroke="${typeof node.color === "object"
+                                    ? node.color.border
+                                    : node.color}"
+                    stroke-width="1.0"
+                    />`
+                );
+            }
+
+            svg.push(`<text
+                x="${p.x}"
+                y="${p.y + shape.textSize.height / 2 - 2}"
+                text-anchor="middle"
+                font-family="${internalNode.options.font.face}"
+                font-size="${internalNode.options.font.size}"
+                fill="${internalNode.options.font.color}">
+                    ${node.label}
+                </text>`
+            );
+        });
+
+        svg.push("</svg>");
+
+        //Download
+
+        const blob = new Blob(
+            [svg.join("")],
+            { type: "image/svg+xml;charset=utf-8" }
+        );
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+
+        a.href = url;
+        a.download = "graph.svg";
+
+        document.body.appendChild(a);
+
+        a.click();
+
+        document.body.removeChild(a);
+
+        URL.revokeObjectURL(url);
     }
 };
 
